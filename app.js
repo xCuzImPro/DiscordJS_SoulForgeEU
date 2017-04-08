@@ -24,46 +24,98 @@ const config = require("./config.json");
 function commandIs(str, msg) {
     return msg.content.toLowerCase().startsWith('config.prefix' + str)
 }
+
 function pluck(arry) {
-    return arry.map(function(item) { return item[`name`]; });
+    return arry.map(function (item) {
+        return item[`name`];
+    });
 }
+
 function hasRole(mem, role) {
-    if (pluck(mem.roles).includes(role)){
+    if (pluck(mem.roles).includes(role)) {
         return true;
     } else {
         return false;
     }
 }
 
-
 bot.on('ready', () => {
-  console.log('I am ready!');
+    console.log('I am ready!');
 });
 
 
 //TODO Welcome Message
 bot.on("guildMemberAdd", member => {
-  let guild = member.guild
-  guild.defaultChannel.sendMessage(`Welcome ${member.user} to this Server.`).catch(console.error);
+    let guild = member.guild
+    guild.defaultChannel.sendMessage(`Welcome ${member.user} to this Server.`).catch(console.error);
 });
 
 bot.on("guildCreate", guild => {
-  console.log(`New guild added : ${guild.name}, owned by $(guild.owner.user.username)`);
+    console.log(`New guild added : ${guild.name}, owned by $(guild.owner.user.username)`);
 });
 
 
-// Change Status / Check Game // Check Game / He Playing a Game?
+// Change Status / Check Game / He Playing a Game?
+bot.on("presenceUpdate", (oldMember, newMember) => {
+    let guild = newMember.guild;
+    let Minecraft = guild.roles.find("name", "Playing Minecraft");
+    if (!Minecraft) return;
+
+    // Play GTA Five
+    let Grand_Theft_Auto_V = guild.roles.find("name", "Playing Grand_Theft_Auto_V");
+    if (!Grand_Theft_Auto_V) return;
+
+    const game = newMember.user.presence.game;
+    if (game && (game.name && game.name.split(" ")[0] === "Minecraft")) {
+        //  code
+        newMember.addRole(Minecraft).catch(console.error);
+    } else if (!game && newMember.roles.has(Minecraft.id)) {
+        newMember.removeRole(Minecraft).catch(console.error);
+    }
+// Play GTA Five
+    if (game && (game.name && game.name.split(" ")[0] === "Grand Theft Auto V")) {
+        //  code
+        newMember.addRole(Grand_Theft_Auto_V).catch(console.error);
+    } else if (!game && newMember.roles.has(Grand_Theft_Auto_V.id)) {
+        newMember.removeRole(Grand_Theft_Auto_V).catch(console.error);
+    }
+});
+
+/* BACKUP
+
+// Change Status / Check Game / He Playing a Game?
 bot.on("presenceUpdate", (oldMember, newMember) => {
   let guild = newMember.guild;
   let playRole = guild.roles.find("name", "Playing Minecraft");
   if (!playRole) return;
 
-  if (newMember.user.presence.game && newMember.user.presence.game.name === "Minecraft") {
+  const game = newMember.user.presence.game;
+  if (game && (game.name && game.name.split(" ")[0] === "Minecraft")) {
+    //  code
     newMember.addRole(playRole).catch(console.error);
+  } else if (!newMember.user.presence.game && newMember.roles.has(playRole.id)) {
+    newMember.removeRole(playRole).catch(console.error);
+  }
+  });
+
+END BACKUP */
+
+/* if (newMember.presence.game.name.split(' ')[0] === 'Minecraft') {
+    newMember.addRole(playRole).catch(console.error);
+  } else if (!newMember.user.presence.game && newMember.roles.has(playRole.id)) {
+    newMember.removeRole(playRole).catch(console.error);
+  }
+  });
+*/
+/* old methode
+  if (newMember.user.presence.game && newMember.user.presence.game.name == Minecraft) {
+    newMember.addRole(playRole).catch(console.error);
+    //if (newMember.user.presence.game && newMember.user.presence.game.name === "Minecraft 1.8.8")
   }else if (!newMember.user.presence.game && newMember.roles.has(playRole.id)) {
     newMember.removeRole(playRole).catch(console.error);
   }
 });
+*/
 
 // Set Prefix for command!
 // const prefix = "!";
@@ -96,32 +148,29 @@ bot.on('message', message => {
         message.channel.sendMessage('pong!').catch(console.error);
     } else
 
-        if (message.content.startsWith(config.prefix + "foo")) {
-            let modRole = message.guild.roles.find("name", "Mods");
-            if (message.member.roles.has(modRole.id)) {
-                message.channel.sendMessage("bar!").catch(console.error);
-            } else {
-                message.reply("You bleb, you don´t have the permissions to use this Command!").catch(console.error);
-            }
+    if (message.content.startsWith(config.prefix + "foo")) {
+        let modRole = message.guild.roles.find("name", "Mods");
+        if (message.member.roles.has(modRole.id)) {
+            message.channel.sendMessage("bar!").catch(console.error);
+        } else {
+            message.reply("You bleb, you don´t have the permissions to use this Command!").catch(console.error);
         }
-
-
-    //TODO: KICK Function!
-
-/* Kick dont fixxed!
-    if (commandIs("kick", message)) {
-        if (hasRole(message.member, "Moderator") || hasRole(message.member, "Leitung")) {
-            if (args.length === 1) {
-                message.channel.sendMessage('Du hast kein Argument definiert. Usage: `!kick @User`')
-            } else {
-                message.guild.member(message.mentions.users.first()).kick();
-            }
-
-        }
-
     }
-*/
 
+    // TODO: KICK Function!
+    /* Kick dont fixxed!
+        if (commandIs("kick", message)) {
+            if (hasRole(message.member, "Moderator") || hasRole(message.member, "Leitung")) {
+                if (args.length === 1) {
+                    message.channel.sendMessage('Du hast kein Argument definiert. Usage: `!kick @User`')
+                } else {
+                    message.guild.member(message.mentions.users.first()).kick();
+                }
+
+            }
+
+        }
+    */
 
     /*
       if (message.content.startsWith(config.prefix + "kick")) {
@@ -134,7 +183,7 @@ bot.on('message', message => {
           if (message.mentions.users.size === 0) {
             return message.reply("Usage: `@User to kick`").catch(console.error);
         }
-          
+
     let kickMember = message.guild.member(message.mentions.users.first());
     if (!kickMember) {
         return message.reply("That user does not seen valid").catch(console.error);
@@ -147,57 +196,55 @@ bot.on('message', message => {
     }).catch(console.error);
 }
 
-*/ 
-  if (message.content.startsWith(config.prefix + "eval")) {
-    if (message.author.id !== "156473495348314113") return;
-    try {
-      var code = args.join(" ");
-      var evaled = eval(code);
- 
-      if (typeof evaled !== "string")
-        evaled = require("util").inspect(evaled);
- 
-      message.channel.sendCode("xl", clean(evaled));
-    } catch(err) {
-      message.channel.sendMessage(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
-    }
-   }
+*/
 
-//TODO Avatar!
-  // if the message is "what is my avatar",
-  if (message.content.startsWith(config.prefix + "avatar")) {
-    // send the user's avatar URL
-    message.reply(message.author.avatarURL).catch(console.error);
-  }
+/* EVAL FEHLER
+    if (message.content.startsWith(config.prefix + "eval")) {
+        if (message.author.id !== "156473495348314113") return;
+        try {   
+            var code = args.join(" ");   
+            var evaled = eval(code);    
+            if (typeof evaled !== "string")  evaled = require("util").inspect(evaled);    
+            message.channel.sendCode("xl", clean(evaled));  
+        } catch (err) {   
+            message.channel.sendMessage(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);  
+        } 
+    }
+*/
+    // TODO Avatar!
+    // if the message is "what is my avatar",
+    if (message.content.startsWith(config.prefix + "avatar")) {
+        // send the user's avatar URL
+        message.reply(message.author.avatarURL).catch(console.error);
+    }
 
-//TODO twitter APi
-  //if the Prefix + Twiter write
-  if (message.content.startsWith(config.prefix + "twitter")) {
-    // then send this in this channel:
-    message.channel.sendMessage("Unser Twitter Acc: https://twitter.com/SoulForgeEU").catch(console.error);
-  }
+    // TODO twitter APi
+    //if the Prefix + Twiter write
+    if (message.content.startsWith(config.prefix + "twitter")) {
+        // then send this in this channel:
+        message.channel.sendMessage("Unser Twitter Acc: https://twitter.com/SoulForgeEU").catch(console.error);
+    }
 
-//TODO TeamSpeak3 APi
-  //if the Prefix + Twiter write
-  if (message.content.startsWith(config.prefix + "ts")) {
-    // then send this in this channel:
-    message.channel.sendMessage('Ich lade euch ganz herzlich ein zu meinem Teamspeak3 Server: http://www.teamspeak.com/invite/ts3.soulforge.eu/').catch(console.error);
+    // TODO TeamSpeak3 APi
+    //if the Prefix + Twiter write
+    if (message.content.startsWith(config.prefix + "ts")) {
+        // then send this in this channel:
+        message.channel.sendMessage('Ich lade euch ganz herzlich ein zu meinem Teamspeak3 Server: http://www.teamspeak.com/invite/ts3.soulforge.eu/').catch(console.error);
     }
 
 }); // END MESSAGE HANDLER
 
 // This is the function zu eval command!
 function clean(text) {
-  if (typeof(text) === "string")
-    return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
-  else
-      return text;
-  }
+    if (typeof (text) === "string")
+        return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203)); 
+    else    return text;
+}
 
-  // log our bot in - BotToken
-  bot.login(config.token);
+// log our bot in - BotToken
+bot.login(config.token);
 
-//TODO voiceChannel - MusicBot
+// TODO voiceChannel - MusicBot
 /* const DiscordDJ = require('DiscordDJ');
 var music = new DiscordDJ();
 
